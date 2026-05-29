@@ -1,5 +1,5 @@
 {
-  "name": "Agentic AI Workflow Assignment_kashishSrivastava",
+  "name": "Agentic AI Workflow",
   "nodes": [
     {
       "parameters": {
@@ -75,7 +75,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=You are an expert technical recruiting assistant. Your task is to analyze the candidate's resume text against the target Job Description (JD).\n\nYou must output your final assessment analysis STRICTLY as a raw JSON object. Do not wrap it in markdown block quotes, backticks, or write any introductory prose.\n\nTarget JSON Structure:\n{\n  \"candidate_name\": \"{{ $json.info.Title || 'Unknown' }}\",\n  \"match_percentage\": <Calculate a match score integer from 0 to 100>,\n  \"matching_skills\": [\"skill1\", \"skill2\"],\n  \"non_matching_skills\": [\"skill3\", \"skill4\"],\n  \"final_recommendation\": \"<Set to 'best fit' if score > 80, 'average fit' if score is 50-80, or 'not fit' if score < 50>\"\n}\n\n---\nJOB DESCRIPTION REQUIREMENTS:\n{{ $json.jd_text }}\n\n---\nCANDIDATE RESUME TEXT:\n{{ $json.text }}",
+        "text": "=You are an expert technical recruiting assistant. Your task is to analyze the candidate's resume text against the target Job Description (JD).\n\nYou must output your final assessment analysis STRICTLY as a raw JSON object. Do not wrap it in markdown block quotes, backticks, or write any introductory prose.\n\nTarget JSON Structure:\n{\n  \"candidate_name\": \"<Extract the candidate's full name from the resume text>\",\n  \"match_percentage\": <Calculate a match score integer from 0 to 100>,\n  \"matching_skills\": [\"skill1\", \"skill2\"],\n  \"non_matching_skills\": [\"skill3\", \"skill4\"],\n  \"final_recommendation\": \"<Set to 'best fit' if score > 80, 'average fit' if score is 50-80, or 'not fit' if score < 50>\"\n}\n\n---\nJOB DESCRIPTION REQUIREMENTS:\n{{ $json.jd_text }}\n\n---\nCANDIDATE RESUME TEXT:\n{{ $json.text }}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -89,7 +89,7 @@
     },
     {
       "parameters": {
-        "modelName": "models/gemini-3.5-flash",
+        "modelName": "models/gemini-2.5-pro",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
