@@ -1,0 +1,229 @@
+{
+  "name": "Agentic AI Workflow Assignment_kashishSrivastava",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Resume Screener Portal",
+        "formDescription": "A resume screener portal is either a tool for job seekers to optimize resumes against Applicant Tracking Systems (ATS), or an AI-driven platform for recruiters to automatically rank candidates.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "job_description",
+              "fieldType": "file"
+            },
+            {
+              "fieldLabel": "resumes",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        208,
+        0
+      ],
+      "id": "e3ebbd5a-c2f6-471a-81d7-d6b1ea7d1e3c",
+      "name": "On form submission",
+      "webhookId": "fc1eab03-a9f1-4b45-bc7f-25518d846b0e"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "job_description",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "cdd8c547-6c5d-4413-bb3f-ced0d5a19cc3",
+      "name": "Extract_JD"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Grab the incoming binary attachments array\nconst binaryData = $input.last().binary;\nconst outputItems = [];\n\n// Loop through all binary elements looking for keys starting with 'resumes'\nfor (const [key, fileData] of Object.entries(binaryData)) {\n  if (key.startsWith('resumes')) {\n    outputItems.push({\n      json: {\n        // Keep the already extracted JD text attached to every single resume object instance\n        jd_text: $node[\"Extract_JD\"].json.text \n      },\n      binary: {\n        // Break this specific resume out as its own separate execution item\n        resume_file: fileData \n      }\n    });\n  }\n}\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "1a88da6d-ec50-4ec2-82cf-09b2df0612a2",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "resume_file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        832,
+        0
+      ],
+      "id": "77aa8ab8-ade7-40f0-85d5-58b113f58bae",
+      "name": "Extract_Resumes"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert technical recruiting assistant. Your task is to analyze the candidate's resume text against the target Job Description (JD).\n\nYou must output your final assessment analysis STRICTLY as a raw JSON object. Do not wrap it in markdown block quotes, backticks, or write any introductory prose.\n\nTarget JSON Structure:\n{\n  \"candidate_name\": \"{{ $json.info.Title || 'Unknown' }}\",\n  \"match_percentage\": <Calculate a match score integer from 0 to 100>,\n  \"matching_skills\": [\"skill1\", \"skill2\"],\n  \"non_matching_skills\": [\"skill3\", \"skill4\"],\n  \"final_recommendation\": \"<Set to 'best fit' if score > 80, 'average fit' if score is 50-80, or 'not fit' if score < 50>\"\n}\n\n---\nJOB DESCRIPTION REQUIREMENTS:\n{{ $json.jd_text }}\n\n---\nCANDIDATE RESUME TEXT:\n{{ $json.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "b8e5c37a-fcb6-450d-a38f-5c721bf93c4d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        912,
+        208
+      ],
+      "id": "d50a543e-ff22-40c2-ab5b-1de7ca6c7eca",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "dHI6rqCgSO8xOKeb",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop through all items incoming from the AI Agent\nreturn $input.all().map(item => {\n  const data = item.json.output;\n  \n  return {\n    json: {\n      candidate_name: data.candidate_name || \"Unknown\",\n      match_percentage: data.match_percentage || 0,\n      matching_skills: Array.isArray(data.matching_skills) ? data.matching_skills.join(', ') : (data.matching_skills || \"\"),\n      non_matching_skills: Array.isArray(data.non_matching_skills) ? data.non_matching_skills.join(', ') : (data.non_matching_skills || \"\"),\n      final_recommendation: data.final_recommendation || \"\"\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        0
+      ],
+      "id": "1a8900da-d1d6-45d0-b19c-9ac5fcf4d5bb",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        0
+      ],
+      "id": "71e9e878-4665-4bc2-a9a0-4c4a50afc6b7",
+      "name": "Convert to File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract_JD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract_JD": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Extract_Resumes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract_Resumes": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1299167c-f520-42b6-aca1-51b32b11c214",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3ba849058a739b225a525a3db6691f8d07e5fbc5c04d28f0b8f42174c4565fb2"
+  },
+  "id": "fS7WVhWjB6jodXQy",
+  "tags": []
+}
