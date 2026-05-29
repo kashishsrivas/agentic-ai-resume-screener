@@ -20,3 +20,6 @@ An automated backend workflow built in **n8n** that parses job descriptions and 
 3. Create a blank canvas, click the menu (`...`) in the top right, and select **Import from File**.
 4. Configure your Google Gemini credentials in the chat model node.
 5. Hit **Execute workflow**!
+
+
+<img width="873" height="304" alt="Screenshot 2026-05-29 at 5 51 27 PM" src="https://github.com/user-attachments/assets/3e5335d0-f7e3-4d1c-9167-02f253a8f41b" />
